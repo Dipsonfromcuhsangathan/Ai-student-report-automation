@@ -1,0 +1,207 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f299bf4c-c339-4139-a42b-a2ba0e6fc6fe",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fIiDoLzoo_keMzH334jHdNxmzpYtzfIJFTWFtWy3Xn0",
+          "mode": "list",
+          "cachedResultName": "student_marks_sample_5f9c1878-ec99-49e4-9ed9-469cf119f941_315287_",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fIiDoLzoo_keMzH334jHdNxmzpYtzfIJFTWFtWy3Xn0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1837533656,
+          "mode": "list",
+          "cachedResultName": "student_marks_sample_5f9c1878-ec99-49e4-9ed9-469cf119f941_315287_.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fIiDoLzoo_keMzH334jHdNxmzpYtzfIJFTWFtWy3Xn0/edit#gid=1837533656"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f8063350-7202-4752-873b-c23642440b07",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jhUg2cnYOmYd0RHC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "8d694f3f-54e1-4750-9a6f-e9ad67376ae7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "b0b35253-b71d-45bb-91c1-432b97c288e6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        144
+      ],
+      "id": "d604c9e3-50c0-455d-9933-ea03040e2e52",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const student = $input.item.json;\n\nconst prompt = `You are an academic performance analyst.\nTask: write a short performance report for this student based on their marks.\nRules: Be constructive, mention strengths and areas to improve, keep it under 150 words.\nOutput format: Return plain text only, no headers.\n\nStudent Name: ${student.Name}\nMarks: ${student.Marks}`;\n\nreturn { prompt };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        144
+      ],
+      "id": "b5ee5991-8f28-40d7-b371-ff43882485ac",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.prompt) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        592,
+        144
+      ],
+      "id": "38e975fd-687b-4941-ba21-fd8a5d0702ea",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "nQKuBmD01f3Ulyai",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "gnischal514@gmail.com",
+        "subject": "=Approval Needed: Student Report",
+        "message": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        144
+      ],
+      "id": "0d0178f6-3f88-40ff-bf85-9c040ed15295",
+      "name": "Send message and wait for response",
+      "webhookId": "893cc2c4-af25-4d16-9ce1-e88a2fb75c4e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ecJ41njZdkjXSBEl",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3b2d769b-ab7a-4b6e-bac1-d6b788c7a296",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "205fa0d0e19b70eaa95c4a36be47fbf99e725bce6aa935855caa08106df244bb"
+  },
+  "nodeGroups": [],
+  "id": "onC1mFpDkIfg8neC",
+  "tags": []
+}
